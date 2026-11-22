@@ -12,7 +12,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.concurrent.TimeUnit;
 
-
 @Config
 @TeleOp
 public class Monkey_Paw_Controlled extends LinearOpMode {
@@ -20,53 +19,111 @@ public class Monkey_Paw_Controlled extends LinearOpMode {
     private ServoWrapperClass elbow;
     private ServoWrapperClass wrist;
     private DcMotorEx encoder;
-    private Timing.Timer homingTimer = new Timing.Timer(1500, TimeUnit.MILLISECONDS);
+
+    public static int time=3000;
+    private Timing.Timer homingTimer = new Timing.Timer(time, TimeUnit.MILLISECONDS);
+
+    public static int x; //for when needing to tune deg
+    public static int y; //for when needing to tune deg
+    private double currentElbowTarget = 0.0;
+    double currentWristTarget = 0.0;
+
+    double actualWristAngle;
+    double actualElbowAngle;
+
+    String targetStatusElbow = "";
+    String targetStatusWrist = "";
+    String targetStatusMechanism = "";
+
+
+    double tolerance = 5.0;
+    boolean elbowCorrect = false;
+    boolean wristCorrect = false;
 
     @Override
     public void runOpMode() {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         encoder = hardwareMap.get(DcMotorEx.class, "encoder");
         encoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        elbow = new ServoWrapperClass(hardwareMap.get(Servo.class, "elbow"),true,encoder,0.0,0.0,0.0 );
-        wrist = new ServoWrapperClass(hardwareMap.get(Servo.class, "wrist"),false,null,0.0,0.0,0.0 );
-
+        elbow = new ServoWrapperClass(hardwareMap.get(Servo.class, "elbow"),true,encoder,10,150.0,52); //26-16 gear ratio (16 is ouput,26 is servo one)
+        wrist = new ServoWrapperClass(hardwareMap.get(Servo.class, "wrist"),false,null,10.0,180.0,0 );
 
         homingTimer.start();
         while(!homingTimer.done() && !isStopRequested()){
             elbow.setAngle(0);
             elbow.runToPos();
-            wrist.setAngle(0);
-            wrist.runToPos();
+            wrist.setAngle(90);
+            wrist.runToPos();;
         }
         if(homingTimer.done()){
             encoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            encoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
+        telemetry.addData("homingTimer: Status:", homingTimer.done());
+        telemetry.addData("Encoder pos:", encoder.getCurrentPosition());
+        telemetry.update();
         waitForStart();
         while (opModeIsActive()) {
-            //for the actual movement make it so that it sets + uses target position and the
-            //correlation(ratios) to move
-            if(gamepad1.cross){
-                wrist.setAngle(10);
-                wrist.runToPos();
-                elbow.setAngle(10);
+            if (gamepad1.cross){ //parallel
+                currentElbowTarget = 69.0;
+                elbow.setAngle(currentElbowTarget);
                 elbow.runToPos();
-                //need to completely change this so like its connected, like it moves based of
-                //each other-need to figure that out
-            }
-            if (gamepad1.triangle){
-                elbow.setAngle(0);
-                elbow.runToPos();
-                wrist.setAngle(0);
+
+                currentWristTarget = 10.0;
+                wrist.setAngle(currentWristTarget);
                 wrist.runToPos();
-                //change to what it should be
             }
-            //for elbow you'll like need a loop prob checking pos w/encoder every time to be precise
+            if (gamepad1.triangle){//extract
+                currentElbowTarget = 10.0;
+                elbow.setAngle(currentElbowTarget);
+                elbow.runToPos();
 
+                currentWristTarget = 90.0;
+                wrist.setAngle(currentWristTarget);
+                wrist.runToPos();
+            }
 
-            telemetry.addData("elbowAngle:", elbow.getAngle());
-            telemetry.addData("wristAngle:", wrist.getAngle());
+            actualWristAngle = wrist.getAngle();
+            actualElbowAngle = elbow.getAngle();
+            elbowCorrect = Math.abs(actualElbowAngle - currentElbowTarget) <= tolerance; //10 is min angle, need
+            wristCorrect = Math.abs(actualWristAngle - currentWristTarget) <= tolerance;
+
+            if (elbowCorrect) {
+                targetStatusElbow = "AT TARGET";
+            } else {
+                targetStatusElbow = "MOVING/NOT AT TARGET";
+            }
+            if (wristCorrect) {
+                targetStatusWrist = "AT TARGET";
+            } else {
+                targetStatusWrist = "MOVING/NOT AT TARGET";
+            }
+            if(elbowCorrect && wristCorrect){
+                targetStatusMechanism = "AT TARGET";
+            } else {
+                targetStatusMechanism = "MOVING/NOT AT TARGET";
+            }
+
+            /* for when needing to tune deg
+            elbow.setAngle(x);
+            elbow.runToPos();
+            wrist.setAngle(y);
+            wrist.runToPos();
+*/
+            telemetry.addData("CurrentElbowAngle:", actualElbowAngle);
+            telemetry.addData("ElbowTargetAngle:", currentElbowTarget);
+            telemetry.addData("Elbow Status:", targetStatusElbow);
+
+            telemetry.addData("CurrentWristAngle:", actualWristAngle);
+            telemetry.addData("WristTargetAngle:", currentWristTarget);
+            telemetry.addData("Wrist Status:", targetStatusWrist);
+
+            telemetry.addData("Monkey Paw Status:", targetStatusMechanism);
+
             telemetry.addData("EncoderPOS", encoder.getCurrentPosition());
+
             telemetry.update();
         }
     }
 }
+

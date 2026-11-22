@@ -19,6 +19,9 @@ public class ServoWrapperClass {
     private double currentTargetAngle = 0.0;
     private double lastReadEncoderAngle = 0.0;
 
+    //
+    private double servoPos;
+
     public ServoWrapperClass(Servo servo, boolean useEncoder, DcMotorEx encoder, double minAngle, double maxAngle, double encoderTicksPerDegree) {
         this.servo = servo;
         // left side is the thing in the actual class, and right side is what is passed in
@@ -42,8 +45,10 @@ public class ServoWrapperClass {
         if (useEncoder) {
             readPosition();
             return lastReadEncoderAngle;
+        } else {
+            servoPos = servo.getPosition();
+            return minAngle + (servoPos * (maxAngle - minAngle));
         }
-        return servo.getPosition();
     }
 
     public void setAngle(double angle) {
@@ -53,6 +58,7 @@ public class ServoWrapperClass {
             angle = maxAngle;
         }
         currentTargetAngle = angle;
+
     }
     public void runToPos(){
         double position = (currentTargetAngle-minAngle)/(maxAngle-minAngle);
