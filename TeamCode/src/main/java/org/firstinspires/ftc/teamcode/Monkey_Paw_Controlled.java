@@ -62,19 +62,34 @@ public class Monkey_Paw_Controlled extends LinearOpMode {
         telemetry.addData("homingTimer: Status:", homingTimer.done());
         telemetry.addData("Encoder pos:", encoder.getCurrentPosition());
         telemetry.update();
-        waitForStart();
         while (opModeIsActive()) {
             if (gamepad1.cross){ //parallel
                 currentElbowTarget = 69.0;
+                if (currentElbowTarget < elbow.minAngle) {
+                    currentElbowTarget = elbow.minAngle;
+                } else if (currentElbowTarget > elbow.maxAngle) {
+                    currentElbowTarget = elbow.maxAngle;
+                }
                 elbow.setAngle(currentElbowTarget);
                 elbow.runToPos();
 
                 currentWristTarget = 10.0;
+                if (currentWristTarget < wrist.minAngle) {
+                    currentWristTarget = wrist.minAngle;
+                } else if (currentWristTarget > wrist.maxAngle) {
+                    currentWristTarget = wrist.maxAngle;
+                }
                 wrist.setAngle(currentWristTarget);
                 wrist.runToPos();
             }
+            ///
             if (gamepad1.triangle){//extract
                 currentElbowTarget = 10.0;
+                if (currentElbowTarget < elbow.minAngle) {
+                    currentElbowTarget = elbow.minAngle;
+                } else if (currentElbowTarget > elbow.maxAngle) {
+                    currentElbowTarget = elbow.maxAngle;
+                }
                 elbow.setAngle(currentElbowTarget);
                 elbow.runToPos();
 
@@ -82,10 +97,10 @@ public class Monkey_Paw_Controlled extends LinearOpMode {
                 wrist.setAngle(currentWristTarget);
                 wrist.runToPos();
             }
-
+            ///
             actualWristAngle = wrist.getAngle();
             actualElbowAngle = elbow.getAngle();
-            elbowCorrect = Math.abs(actualElbowAngle - currentElbowTarget) <= tolerance; //10 is min angle, need
+            elbowCorrect = Math.abs(actualElbowAngle - currentElbowTarget) <= tolerance;
             wristCorrect = Math.abs(actualWristAngle - currentWristTarget) <= tolerance;
 
             if (elbowCorrect) {
@@ -104,7 +119,7 @@ public class Monkey_Paw_Controlled extends LinearOpMode {
                 targetStatusMechanism = "MOVING/NOT AT TARGET";
             }
 
-            /* for when needing to tune deg
+            /* for when needing to test
             elbow.setAngle(x);
             elbow.runToPos();
             wrist.setAngle(y);
@@ -124,6 +139,7 @@ public class Monkey_Paw_Controlled extends LinearOpMode {
 
             telemetry.update();
         }
+        waitForStart();
     }
 }
 

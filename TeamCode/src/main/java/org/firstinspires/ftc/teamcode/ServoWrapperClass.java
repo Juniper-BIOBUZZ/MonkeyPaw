@@ -11,8 +11,8 @@ public class ServoWrapperClass {
     private DcMotorEx encoder;
 
     // Software hardstops -degrees, right?
-    private double minAngle;
-    private double maxAngle;
+    public double minAngle;
+    public double maxAngle;
 
     //Gear ratios and data variables
     private double encoderTicksPerDegree = 1.0;
@@ -52,14 +52,10 @@ public class ServoWrapperClass {
     }
 
     public void setAngle(double angle) {
-        if (angle < minAngle) {
-            angle = minAngle;
-        } else if (angle > maxAngle) {
-            angle = maxAngle;
-        }
         currentTargetAngle = angle;
 
     }
+
     public void runToPos(){
         double position = (currentTargetAngle-minAngle)/(maxAngle-minAngle);
         servo.setPosition(position);
