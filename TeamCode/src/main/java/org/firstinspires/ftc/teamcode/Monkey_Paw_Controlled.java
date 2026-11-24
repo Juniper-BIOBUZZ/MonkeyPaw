@@ -45,15 +45,13 @@ public class Monkey_Paw_Controlled extends LinearOpMode {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         encoder = hardwareMap.get(DcMotorEx.class, "encoder");
         encoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        elbow = new ServoWrapperClass(hardwareMap.get(Servo.class, "elbow"),true,encoder,10,150.0,52); //26-16 gear ratio (16 is ouput,26 is servo one)
-        wrist = new ServoWrapperClass(hardwareMap.get(Servo.class, "wrist"),false,null,10.0,180.0,0 );
+        elbow = new ServoWrapperClass(hardwareMap.get(Servo.class, "elbow"),true,encoder,10,150.0,52, 10.0, 69.0); //26-16 gear ratio (16 is ouput,26 is servo one)
+        wrist = new ServoWrapperClass(hardwareMap.get(Servo.class, "wrist"),false,null,10.0,180.0,0 ,90.0, 10.0);
 
         homingTimer.start();
         while(!homingTimer.done() && !isStopRequested()){
-            elbow.setAngle(0);
-            elbow.runToPos();
-            wrist.setAngle(90);
-            wrist.runToPos();;
+            elbow.retract();
+            wrist.retract();
         }
         if(homingTimer.done()){
             encoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -64,38 +62,15 @@ public class Monkey_Paw_Controlled extends LinearOpMode {
         telemetry.update();
         while (opModeIsActive()) {
             if (gamepad1.cross){ //parallel
-                currentElbowTarget = 69.0;
-                if (currentElbowTarget < elbow.minAngle) {
-                    currentElbowTarget = elbow.minAngle;
-                } else if (currentElbowTarget > elbow.maxAngle) {
-                    currentElbowTarget = elbow.maxAngle;
-                }
-                elbow.setAngle(currentElbowTarget);
+                elbow.extend();
                 elbow.runToPos();
 
-                currentWristTarget = 10.0;
-                if (currentWristTarget < wrist.minAngle) {
-                    currentWristTarget = wrist.minAngle;
-                } else if (currentWristTarget > wrist.maxAngle) {
-                    currentWristTarget = wrist.maxAngle;
-                }
-                wrist.setAngle(currentWristTarget);
-                wrist.runToPos();
+                wrist.extend();
             }
             ///
-            if (gamepad1.triangle){//extract
-                currentElbowTarget = 10.0;
-                if (currentElbowTarget < elbow.minAngle) {
-                    currentElbowTarget = elbow.minAngle;
-                } else if (currentElbowTarget > elbow.maxAngle) {
-                    currentElbowTarget = elbow.maxAngle;
-                }
-                elbow.setAngle(currentElbowTarget);
-                elbow.runToPos();
-
-                currentWristTarget = 90.0;
-                wrist.setAngle(currentWristTarget);
-                wrist.runToPos();
+            if (gamepad1.triangle){//retract
+                elbow.retract();
+                wrist.retract();
             }
             ///
             actualWristAngle = wrist.getAngle();

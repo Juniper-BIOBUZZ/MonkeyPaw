@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-public class elbowFSM {
+public class ElbowFSM {
     public enum ElbowState {
         AT_TARGET,
         NOT_AT_TARGET
